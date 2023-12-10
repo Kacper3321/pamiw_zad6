@@ -1,0 +1,17 @@
+td {
+    border: none; /* Ensure no border for each cell */
+}
+
+.center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Ustaw wysokość na całą wysokość widoku przeglądarki */
+}
+
+button.home-button {
+    width: 500px;
+    height: 300px;
+    font-size: large;
+}
