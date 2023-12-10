@@ -71,7 +71,7 @@ self.addEventListener('message', (event) => {
 
 // Any other custom service worker logic can go here.
 
-self.addEventListener('activate', event => {
+/*self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
@@ -79,6 +79,91 @@ self.addEventListener('activate', event => {
                     // Usuń stare cache, które nie jest częścią bieżącej wersji aplikacji
                     if (cacheName !== 'my-cache') {
                         console.log('Service Worker: usuwanie starego cache', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});*/
+
+
+// Nazwa cache
+const CACHE_NAME = 'v1';
+
+// Lista zasobów do buforowania
+const urlsToCache = [
+    '/',
+    '/index.html',
+    '/css/style.css',
+    '/js/script.js',
+    '/views/BookList.css',
+    '/views/BookList.js',
+    '/views/CheckOutList.css',
+    '/views/CheckOutList.js',
+    '/views/Home.css',
+    '/views/Home.js',
+    '/App.css',
+    '/App.js',
+    'D:/3Studia/pamiw/pamiw_zad6/frontend/public/index.html'
+
+
+    // Dodaj więcej zasobów, które chcesz buforować
+];
+
+// Instalacja Service Workera i buforowanie zasobów
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Opened cache');
+                return cache.addAll(urlsToCache);
+            })
+    );
+});
+
+// Obsługa żądań sieciowych
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                // Cache hit - zwróć odpowiedź z cache
+                if (response) {
+                    return response;
+                }
+
+                // Jeśli nie ma odpowiedzi w cache, pobierz ją z sieci
+                return fetch(event.request).then(
+                    response => {
+                        // Sprawdź, czy otrzymaliśmy poprawną odpowiedź
+                        if(!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+
+                        // Klonowanie odpowiedzi
+                        var responseToCache = response.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return response;
+                    }
+                );
+            })
+    );
+});
+
+// Aktualizacja Service Workera i usuwanie starych cache
+self.addEventListener('activate', event => {
+    const cacheWhitelist = ['v1'];
+
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
                         return caches.delete(cacheName);
                     }
                 })
